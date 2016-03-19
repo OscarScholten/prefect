@@ -19,43 +19,32 @@ package io.fluffypaws.prefect.impl;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Iterator;
-import java.util.Properties;
 
-import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.junit.rules.RuleChain;
 import org.junit.rules.TemporaryFolder;
+import org.junit.rules.TestRule;
 
-import io.fluffypaws.prefect.api.Object;
 import io.fluffypaws.prefect.api.ImmutableObject;
-import io.fluffypaws.prefect.api.ObjectStore;
+import io.fluffypaws.prefect.api.Object;
 import io.fluffypaws.prefect.api.Stamp;
 import io.fluffypaws.prefect.api.StoreException;
-import io.fluffypaws.prefect.api.StoreFactory;
 import io.fluffypaws.prefect.api.Value;
-
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class ObjectStoreTest {
 
-    private ObjectStore objectStore;
+    private TemporaryFolder temporaryFolder = new TemporaryFolder();
+    private TemporaryObjectStore objectStore = new TemporaryObjectStore(temporaryFolder);
 
     @Rule
-    public TemporaryFolder temporaryFolder = new TemporaryFolder();
+    public TestRule chain = RuleChain.outerRule(temporaryFolder).around(objectStore);
 
     @Rule
     public ExpectedException thrown = ExpectedException.none();
-
-    @Before
-    final public void initializeStore() {
-        Properties properties = new Properties();
-        properties.setProperty(StoreFactory.STORE_DIRECTORY_KEY, temporaryFolder.getRoot().getAbsolutePath());
-        properties.setProperty(ObjectStoreImpl.STORE_LIST_COMPACTING_THRESHOLD_KEY, String.valueOf(3));
-        objectStore = StoreFactory.createObjectStore(properties);
-        assertThat(objectStore).isNotNull();
-    }
 
     @Test
     public void testRootNodeSimpleValueOperations() throws StoreException {
